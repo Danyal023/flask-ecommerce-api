@@ -1,34 +1,28 @@
-from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, jsonify
 
-app = Flask(_name_)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
-db = SQLAlchemy(app)
+app = Flask(__name__)
 
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    stock = db.Column(db.Integer, default=0)
-
-@app.route('/api/products', methods=['GET'])
-def get_products():
-    products = Product.query.all()
-    return jsonify([{"id": p.id, "name": p.name, "price": p.price} for p in products])
-
-@app.route('/api/products', methods=['POST'])
-def add_product():
-    data = request.json
-    new_product = Product(name=data['name'], price=data['price'], stock=data.get('stock', 0))
-    db.session.add(new_product)
-    db.session.commit()
-    return jsonify({"message": "Product added", "id": new_product.id}), 201
+# Sample E-commerce Data - Like Daraz products
+products = [
+    {"id": 1, "name": "Wireless Headphones", "price": 3500, "category": "Electronics"},
+    {"id": 2, "name": "Running Shoes", "price": 5500, "category": "Fashion"},
+    {"id": 3, "name": "Smart Watch", "price": 8000, "category": "Electronics"}
+]
 
 @app.route('/')
 def home():
-    return jsonify({"message": "E-Commerce Backend API | by Engr. Danyal Afzal - UOM | Islamabad"})
+    return jsonify({"message": "Flask E-commerce API is Running!", "status": "success"})
 
-if _name_ == '_main_':
-    with app.app_context():
-        db.create_all()
+@app.route('/products', methods=['GET'])
+def get_products():
+    return jsonify({"products": products, "count": len(products)})
+
+@app.route('/products/<int:product_id>', methods=['GET'])
+def get_product(product_id):
+    product = next((p for p in products if p["id"] == product_id), None)
+    if product:
+        return jsonify(product)
+    return jsonify({"error": "Product not found"}), 404
+
+if __name__ == '__main__':
     app.run(debug=True)
